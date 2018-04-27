@@ -1,5 +1,7 @@
 package ro.pub.cs.systems.eim.lab08.chatservicejmdns.networkservicediscoveryoperations;
 
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.content.Context;
 import android.util.Log;
 
@@ -15,6 +17,8 @@ import java.util.concurrent.BlockingQueue;
 import ro.pub.cs.systems.eim.lab08.chatservicejmdns.general.Constants;
 import ro.pub.cs.systems.eim.lab08.chatservicejmdns.general.Utilities;
 import ro.pub.cs.systems.eim.lab08.chatservicejmdns.model.Message;
+import ro.pub.cs.systems.eim.lab08.chatservicejmdns.view.ChatActivity;
+import ro.pub.cs.systems.eim.lab08.chatservicejmdns.view.ChatConversationFragment;
 
 public class ChatClient {
 
@@ -90,6 +94,29 @@ public class ChatClient {
                     //   - add the message to the conversationHistory
                     //   - if the ChatConversationFragment is visible (query the FragmentManager for the Constants.FRAGMENT_TAG tag)
 
+                    while (!Thread.currentThread().isInterrupted()) {
+                        String msg = messageQueue.take();
+                        if(msg != null)
+                        {
+                            printWriter.println(msg);
+                            Message newMsg = new Message(msg, Constants.MESSAGE_TYPE_SENT);
+                            conversationHistory.add(newMsg);
+
+                            if (context != null) {
+                                ChatActivity chatActivity = (ChatActivity)context;
+                                FragmentManager fragmentManager = chatActivity.getFragmentManager();
+                                Fragment fragment = fragmentManager.findFragmentByTag(Constants.FRAGMENT_TAG);
+                                if (fragment instanceof ChatConversationFragment && fragment.isVisible()) {
+                                    ChatConversationFragment chatConversationFragment = (ChatConversationFragment)fragment;
+                                    chatConversationFragment.appendMessage(newMsg);
+                                }
+                            }
+
+                        }
+
+
+                    }
+
                 } catch (Exception exception) {
                     Log.e(Constants.TAG, "An exception has occurred: " + exception.getMessage());
                     if (Constants.DEBUG) {
@@ -124,6 +151,29 @@ public class ChatClient {
                     //   - add the message to the conversationHistory
                     //   - if the ChatConversationFragment is visible (query the FragmentManager for the Constants.FRAGMENT_TAG tag)
                     //   append the message to the graphic user interface
+
+
+                    while (!Thread.currentThread().isInterrupted()) {
+                        String msg = bufferedReader.readLine();
+
+                        if(msg != null)
+                        {
+                            Message newMsg = new Message(msg, Constants.MESSAGE_TYPE_RECEIVED);
+                            conversationHistory.add(newMsg);
+
+                            if (context != null) {
+                                ChatActivity chatActivity = (ChatActivity)context;
+                                FragmentManager fragmentManager = chatActivity.getFragmentManager();
+                                Fragment fragment = fragmentManager.findFragmentByTag(Constants.FRAGMENT_TAG);
+                                if (fragment instanceof ChatConversationFragment && fragment.isVisible()) {
+                                    ChatConversationFragment chatConversationFragment = (ChatConversationFragment)fragment;
+                                    chatConversationFragment.appendMessage(newMsg);
+                                }
+                            }
+                        }
+                    }
+
+
 
                 } catch (Exception exception) {
                     Log.e(Constants.TAG, "An exception has occurred: " + exception.getMessage());
